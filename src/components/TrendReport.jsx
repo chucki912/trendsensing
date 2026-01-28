@@ -50,12 +50,14 @@ const TrendCard = ({ content, index, onKeywordClick, isDark }) => {
                         <div className="px-8 md:px-10 pb-10 pt-2 border-t border-slate-50 dark:border-slate-700/50">
                             <div className="text-slate-700 dark:text-slate-300 leading-relaxed space-y-4 font-sans text-lg">
                                 {bodyLines.map((line, lIdx) => {
-                                    const parts = line.split(/(\[.*?\]\(https?:\/\/[^\s\)]+?\)|https?:\/\/[^\s\)]+|(?:#\S+))/g);
+                                    // Improved regex to match markdown links [text](url) and plain URLs
+                                    const parts = line.split(/(\[[^\]]+\]\([^)]+\)|https?:\/\/[^\s<>)]+|#\S+)/g);
 
                                     return (
                                         <div key={lIdx} className="break-words">
                                             {parts.map((part, pIdx) => {
-                                                const mdMatch = part.match(/\[(.*?)\]\((https?:\/\/[^\s)]+)\)/);
+                                                // Match markdown link format [text](url)
+                                                const mdMatch = part.match(/^\[([^\]]+)\]\(([^)]+)\)$/);
                                                 if (mdMatch) {
                                                     return (
                                                         <a key={pIdx} href={mdMatch[2]} target="_blank" rel="noopener noreferrer" className="text-blue-500 dark:text-indigo-400 hover:underline break-all font-bold">
