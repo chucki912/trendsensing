@@ -1,0 +1,9 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    match /exports/{allPaths=**} {
+      allow read; // Publicly readable for download links
+      allow write: if false; // Only Admin SDK should write
+    }
+  }
+}

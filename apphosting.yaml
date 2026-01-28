@@ -1,0 +1,9 @@
+kind: "AppStack"
+apiVersion: "v1"
+env:
+  - variable: GEMINI_API_KEY
+    secret: GEMINI_API_KEY
+  - variable: FIREBASE_SERVICE_ACCOUNT
+    secret: FIREBASE_SERVICE_ACCOUNT
+  - variable: NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET
+    value: "your-project-id.firebasestorage.app"
