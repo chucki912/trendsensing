@@ -116,11 +116,28 @@ export default function TrendReport({ report, onKeywordClick, industry, isDark }
 
     const parseItems = (text) => {
         if (!text) return [];
-        const parts = text.split(/\n(?=\d+\.\s)/g);
+        // Split by numbered items, but stop at the reference section
+        const mainContent = text.split(/---\n📎/)[0];
+        const parts = mainContent.split(/\n(?=\d+\.\s)/g);
         return parts.filter(part => part.trim().match(/^\d+\.\s/));
     };
 
+    const parseReferences = (text) => {
+        if (!text) return [];
+        const refMatch = text.match(/📎 참고 자료:\n([\s\S]*)/);
+        if (!refMatch) return [];
+        const refLines = refMatch[1].trim().split('\n').filter(line => line.trim());
+        return refLines.map(line => {
+            const match = line.match(/\d+\.\s*\[([^\]]+)\]\(([^)]+)\)/);
+            if (match) {
+                return { title: match[1], url: match[2] };
+            }
+            return null;
+        }).filter(Boolean);
+    };
+
     const items = parseItems(report);
+    const references = parseReferences(report);
     const today = new Date().toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' });
 
     return (
@@ -149,9 +166,40 @@ export default function TrendReport({ report, onKeywordClick, industry, isDark }
 
             <div className="space-y-8 pb-10">
                 {items.length > 0 ? (
-                    items.map((content, idx) => (
-                        <TrendCard key={idx} content={content} index={idx} onKeywordClick={onKeywordClick} isDark={isDark} />
-                    ))
+                    <>
+                        {items.map((content, idx) => (
+                            <TrendCard key={idx} content={content} index={idx} onKeywordClick={onKeywordClick} isDark={isDark} />
+                        ))}
+
+                        {/* Reference Section */}
+                        {references.length > 0 && (
+                            <motion.div
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: 0.3 }}
+                                className="p-8 bg-white dark:bg-slate-800 rounded-3xl shadow-lg border border-slate-200 dark:border-slate-700"
+                            >
+                                <h4 className="text-lg font-bold text-slate-800 dark:text-slate-200 mb-4 flex items-center gap-2">
+                                    📎 참고 자료
+                                </h4>
+                                <div className="space-y-3">
+                                    {references.map((ref, idx) => (
+                                        <div key={idx} className="flex items-start gap-3">
+                                            <span className="text-slate-400 dark:text-slate-500 font-medium">{idx + 1}.</span>
+                                            <a
+                                                href={ref.url}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="text-blue-500 dark:text-indigo-400 hover:underline break-all font-medium leading-relaxed"
+                                            >
+                                                {ref.title}
+                                            </a>
+                                        </div>
+                                    ))}
+                                </div>
+                            </motion.div>
+                        )}
+                    </>
                 ) : (
                     <motion.div
                         initial={{ opacity: 0 }}

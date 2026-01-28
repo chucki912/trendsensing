@@ -33,7 +33,7 @@ Output Format Requirements:
 3. Sentences must end with noun forms or specific dry endings like "~함", "~음", "~것으로 나타남", "~예정됨".
 4. Do NOT use polite conversational endings like "~해요", "~입니다".
 5. **Each item must be exactly 2-3 sentences long.**
-6. For the source, just write "출처: [기사 제목 또는 출처명]" WITHOUT any URL. The system will automatically add verified URLs.
+6. **Do NOT include any source/출처 lines.** The system will automatically add verified sources at the end.
 7. Follow the exact structure below:
 
 날짜: ${today}
@@ -43,17 +43,14 @@ Output Format Requirements:
 <Fact-based summary sentence 1>
 <Fact-based summary sentence 2>
 <Fact-based summary sentence 3 (optional)>
-출처: [기사 제목 또는 출처명]
 키워드: #<Keyword1> #<Keyword2> ...
 
 2. <Title of Trend 2>
 <Summary sentences...>
-출처: [기사 제목 또는 출처명]
 키워드: #<Keyword1> ...
 
 3. <Title of Trend 3>
 <Summary sentences...>
-출처: [기사 제목 또는 출처명]
 키워드: #<Keyword1> ...
 
 
@@ -69,25 +66,40 @@ Generate the report now.
         const candidate = response.candidates?.[0];
         const groundingMetadata = candidate?.groundingMetadata;
 
-        if (groundingMetadata?.groundingChunks) {
+        if (groundingMetadata?.groundingChunks && groundingMetadata?.groundingSupports) {
             const chunks = groundingMetadata.groundingChunks;
-            const realSources = chunks
-                .filter(chunk => chunk.web?.uri && chunk.web?.title)
-                .map(chunk => ({
-                    title: chunk.web.title,
-                    url: chunk.web.uri
-                }));
+            const supports = groundingMetadata.groundingSupports;
 
-            // Replace "출처: [제목]" with "출처: [제목](URL)" using grounding URLs
-            let sourceIndex = 0;
-            reportText = reportText.replace(/출처:\s*\[([^\]]+)\]/g, (match, title) => {
-                if (sourceIndex < realSources.length) {
-                    const source = realSources[sourceIndex];
-                    sourceIndex++;
-                    return `출처: [${title}](${source.url})`;
+            // Map each trend index to its source chunk index
+            const trendToChunk = {};
+            let currentTrendIndex = -1;
+
+            supports.forEach(support => {
+                const text = support.segment?.text || '';
+                const trendMatch = text.match(/^(\d+)\.\s/);
+                if (trendMatch) {
+                    currentTrendIndex = parseInt(trendMatch[1]);
                 }
-                return match; // Keep original if no URL available
+                if (currentTrendIndex > 0 && support.groundingChunkIndices && !trendToChunk[currentTrendIndex]) {
+                    trendToChunk[currentTrendIndex] = support.groundingChunkIndices[0];
+                }
             });
+
+            // Remove any existing 출처 lines
+            reportText = reportText.replace(/출처:.*\n?/g, '');
+
+            // Insert source link before each "키워드:" line
+            for (let trendNum = 1; trendNum <= 3; trendNum++) {
+                const chunkIdx = trendToChunk[trendNum];
+                if (chunkIdx !== undefined && chunks[chunkIdx]?.web?.uri) {
+                    const chunk = chunks[chunkIdx];
+                    const sourceLink = `출처: [${chunk.web.title || '기사 원문'}](${chunk.web.uri})\n`;
+
+                    // Find the keyword line for this trend and insert source before it
+                    const keywordPattern = new RegExp(`(${trendNum}\\.[\\s\\S]*?)(키워드:)`, 'g');
+                    reportText = reportText.replace(keywordPattern, `$1${sourceLink}$2`);
+                }
+            }
         }
 
         return reportText;
