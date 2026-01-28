@@ -50,7 +50,7 @@ const TrendCard = ({ content, index, onKeywordClick, isDark }) => {
                         <div className="px-8 md:px-10 pb-10 pt-2 border-t border-slate-50 dark:border-slate-700/50">
                             <div className="text-slate-700 dark:text-slate-300 leading-relaxed space-y-4 font-sans text-lg">
                                 {bodyLines.map((line, lIdx) => {
-                                    const parts = line.split(/(\[.*?\]\(https?:\/\/[^\s)]+\)|https?:\/\/[^\s)]+|(?:#\S+))/g);
+                                    const parts = line.split(/(\[.*?\]\(https?:\/\/[^\s\)]+?\)|https?:\/\/[^\s\)]+|(?:#\S+))/g);
 
                                     return (
                                         <div key={lIdx} className="break-words">

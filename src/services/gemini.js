@@ -1,6 +1,6 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
-const MODEL_NAME = "gemini-3-pro-preview";
+const MODEL_NAME = "gemini-2.0-flash-exp";
 
 export const generateTrendReport = async (apiKey, industry) => {
     if (!apiKey) throw new Error("API Key is required");
@@ -33,8 +33,9 @@ Output Format Requirements:
 3. Sentences must end with noun forms or specific dry endings like "~함", "~음", "~것으로 나타남", "~예정됨".
 4. Do NOT use polite conversational endings like "~해요", "~입니다".
 5. **Each item must be exactly 2-3 sentences long.**
-6. **Include the specific Source Title and URL** at the bottom of each item in the format: "[Source Name](URL)".
-7. Follow the exact structure below:
+6. **Include the specific Source Title and URL** at the bottom of each item in the format: "출처: [기사 제목](URL)".
+7. **Ensure the URL is a direct link and does not contain extra spaces or text inside the parenthesis.**
+8. Follow the exact structure below:
 
 날짜: ${today}
 제목: [${industry}] 주간 트렌드 리포트
